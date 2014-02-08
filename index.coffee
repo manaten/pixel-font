@@ -1,21 +1,7 @@
 fs        = require 'fs'
 getPixels = require "get-pixels"
 builder   = require 'xmlbuilder'
-
-TMP_PATH  = 'tmp'
-FONT_SIZE = 8
-
-codeMap = [
-  '1234567890!?.,。、ゃゅょャュョー()',
-  'abcdefghijklmnopqrstuvwxyz',
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-  'あいうえおかきくけこさしすせそたちつてとなにぬねのっ',
-  'はひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉ',
-  'がきぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ',
-  'アイウエオカキクケコサシスセソタチツテトナニヌネノッ',
-  'ハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォ',
-  'ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ'
-]
+setting   = require (process.argv[2] or './8x8.json')
 
 class PixelImage
   constructor: (@pixels, @width, @height) ->
@@ -32,8 +18,8 @@ createSvg = (paths)->
   svg.att xmlns: 'http://www.w3.org/2000/svg'
   font = svg
     .ele('def')
-      .ele 'font', {id: '8x8', 'horiz-adv-x': '1024'}
-  font.ele 'font-face', {'units-per-em': '1024', 'ascent':'960', 'descent': '-64'}
+      .ele 'font', {id: setting.name, 'horiz-adv-x': '1024'}
+  font.ele 'font-face', {'units-per-em': '1024', 'ascent':'1024', 'descent': '0'}
   font.ele 'missing-glyph', {'horiz-adv-x': '1024'}
   font.ele 'glyph', {'unicode': '&#x20;', 'd':'', 'horiz-adv-x': '512'}
   for code, path of paths
@@ -76,7 +62,7 @@ pixelsToPath = (pixels)->
       current = path
       x = path.x
       y = path.y
-      pathStr.push "M#{path.x * 1024 / FONT_SIZE} #{(FONT_SIZE-path.y) * 1024 / FONT_SIZE}"
+      pathStr.push "M#{path.x * 1024 / setting.size} #{(setting.size-path.y) * 1024 / setting.size}"
 
       while !current.used
         current.used = true
@@ -98,25 +84,23 @@ pixelsToPath = (pixels)->
   # 連続する同じ方向のパスの簡略化を行う
   pathStr
     .join('')
-    .replace(/R+/g, (match)-> "h#{match.length * 1024 / FONT_SIZE}")
-    .replace(/L+/g, (match)-> "h-#{match.length * 1024 / FONT_SIZE}")
-    .replace(/U+/g, (match)-> "v-#{match.length * 1024 / FONT_SIZE}")
-    .replace(/D+/g, (match)-> "v#{match.length * 1024 / FONT_SIZE}")
+    .replace(/R+/g, (match)-> "h#{match.length * 1024 / setting.size}")
+    .replace(/L+/g, (match)-> "h-#{match.length * 1024 / setting.size}")
+    .replace(/U+/g, (match)-> "v-#{match.length * 1024 / setting.size}")
+    .replace(/D+/g, (match)-> "v#{match.length * 1024 / setting.size}")
     .replace(/[vh]-?\d+$/, 'z')
 
 main = ->
-  fs.mkdirSync TMP_PATH if !fs.existsSync TMP_PATH
-
-  getPixels "8x8_font.png", (err, pixels)->
+  getPixels setting.img, (err, pixels)->
     throw "Bad image path" if err
 
     img = new PixelImage pixels.data, pixels._shape1, pixels._shape0
 
     paths = {}
-    for y in [0..(codeMap.length - 1)]
-      for x in [0..(codeMap[y].length - 1)]
-        paths[codeMap[y].charAt(x)] = pixelsToPath img.getSubPixels x * FONT_SIZE, y * FONT_SIZE, FONT_SIZE, FONT_SIZE
+    for y in [0..(setting.map.length - 1)]
+      for x in [0..(setting.map[y].length - 1)]
+        paths[setting.map[y].charAt(x)] = pixelsToPath img.getSubPixels x * setting.size, y * setting.size, setting.size, setting.size
 
-    fs.writeFileSync '8x8.svg', createSvg paths
+    fs.writeFileSync "#{setting.name}.svg", createSvg paths
 
 main()
