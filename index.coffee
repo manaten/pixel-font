@@ -6,7 +6,7 @@ TMP_PATH  = 'tmp'
 FONT_SIZE = 8
 
 codeMap = [
-  '1234567890!?.,。、ゃゅょャュョ',
+  '1234567890!?.,。、ゃゅょャュョー()',
   'abcdefghijklmnopqrstuvwxyz',
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
   'あいうえおかきくけこさしすせそたちつてとなにぬねのっ',
