@@ -5,6 +5,18 @@ builder   = require 'xmlbuilder'
 TMP_PATH  = 'tmp'
 FONT_SIZE = 8
 
+codeMap = [
+  '1234567890!?.,。、ゃゅょャュョ',
+  'abcdefghijklmnopqrstuvwxyz',
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  'あいうえおかきくけこさしすせそたちつてとなにぬねのっ',
+  'はひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉ',
+  'がきぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ',
+  'アイウエオカキクケコサシスセソタチツテトナニヌネノッ',
+  'ハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォ',
+  'ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ'
+]
+
 class PixelImage
   constructor: (@pixels, @width, @height) ->
 
@@ -15,90 +27,82 @@ class PixelImage
   getSubPixels: (x, y, width, height)->
     @getPixel x + x2, y + y2 for x2 in [0..(width - 1)] for y2 in [0..(height - 1)]
 
-createSvg = (pathString)->
-  builder.create(
-    svg:
-      '@width'           : '8px'
-      '@height'          : '8px'
-      '@viewBox'         : '0 0 8 8'
-      '@shape-rendering' : 'crispEdges'
-      '@xmlns'           : 'http://www.w3.org/2000/svg'
-      '@xmlns:xlink'     : 'http://www.w3.org/1999/xlink'
-      path:
-        '@fill' : '#000000'
-        '@d'    : pathString
-    , {version: '1.0', encoding: 'UTF-8', standalone: true}
-  ).end pretty: true, indent: '  ', newline: '\n'
+createSvg = (paths)->
+  svg = builder.create 'svg', {version: '1.0', encoding: 'UTF-8', standalone: true}
+  svg.att xmlns: 'http://www.w3.org/2000/svg'
+  font = svg
+    .ele('def')
+      .ele 'font', {id: '8x8', 'horiz-adv-x': '1024'}
+  font.ele 'font-face', {'units-per-em': '1024', 'ascent':'960', 'descent': '-64'}
+  font.ele 'missing-glyph', {'horiz-adv-x': '1024'}
+  font.ele 'glyph', {'unicode': '&#x20;', 'd':'', 'horiz-adv-x': '512'}
+  for code, path of paths
+    font.ele 'glyph', {
+      'unicode': "&#x#{code.charCodeAt(0).toString(16)};",
+      'd':path
+    }
+  svg.end(pretty: true, indent: '  ', newline: '\n').replace(/&amp;/g, '&')
 
 pixelsToPath = (pixels)->
   # 重複するパスを取り除きながらパスのリストをつくる
   paths = {}
   for y in [0..(pixels.length - 1)]
     for x in [0..(pixels[y].length - 1)]
-      if pixels[y][x]
-        if paths["#{x+1},#{y}h-1"]?
-          delete paths["#{x+1},#{y}h-1"]
+      if pixels[y][x] == 0
+        if paths["#{x+1},#{y}L"]?
+          delete paths["#{x+1},#{y}L"]
         else
-          paths["#{x},#{y}h1"] = {x:x, y:y, path:"h1", used:false}
-        if paths["#{x+1},#{y+1}v-1"]?
-          delete paths["#{x+1},#{y+1}v-1"]
-        else
-          paths["#{x+1},#{y}v1"] = {x:x+1, y:y, path:"v1", used:false}
-        if paths["#{x},#{y+1}h1"]
-          delete paths["#{x},#{y+1}h1"]
-        else
-          paths["#{x+1},#{y+1}h-1"] = {x:x+1, y:y+1, path:"h-1", used:false}
-        if paths["#{x},#{y}v1"]
-          delete paths["#{x},#{y}v1"]
-        else
-          paths["#{x},#{y+1}v-1"] = {x:x, y:y+1, path:"v-1", used:false}
+          paths["#{x},#{y}R"] = {x:x, y:y, path:"R", used:false}
 
-  # pathのリストからパス文字列を作る
+        if paths["#{x+1},#{y+1}D"]?
+          delete paths["#{x+1},#{y+1}D"]
+        else
+          paths["#{x+1},#{y}U"] = {x:x+1, y:y, path:"U", used:false}
+
+        if paths["#{x},#{y+1}R"]
+          delete paths["#{x},#{y+1}R"]
+        else
+          paths["#{x+1},#{y+1}L"] = {x:x+1, y:y+1, path:"L", used:false}
+
+        if paths["#{x},#{y}U"]
+          delete paths["#{x},#{y}U"]
+        else
+          paths["#{x},#{y+1}D"] = {x:x, y:y+1, path:"D", used:false}
+
+  # unusedなパスを順番にたどり、パス文字列を作る
   pathStr = []
   for _, path of paths
     if !path.used
-      start = path
-      x = start.x
-      y = start.y
-      pathStr.push "M#{start.x},#{start.y}"
+      current = path
+      x = path.x
+      y = path.y
+      pathStr.push "M#{path.x * 1024 / FONT_SIZE} #{(FONT_SIZE-path.y) * 1024 / FONT_SIZE}"
 
-      current = start
-      while true
+      while !current.used
         current.used = true
         pathStr.push current.path
         switch current.path
-          when 'v1'
+          when 'U'
             y++
-            current = paths["#{x},#{y}v1"]||paths["#{x},#{y}h1"]||paths["#{x},#{y}v-1"]||paths["#{x},#{y}h-1"]
-          when 'v-1'
+            current = paths["#{x},#{y}U"]||paths["#{x},#{y}R"]||paths["#{x},#{y}D"]||paths["#{x},#{y}L"]
+          when 'D'
             y--
-            current = paths["#{x},#{y}v-1"]||paths["#{x},#{y}h-1"]||paths["#{x},#{y}v1"]||paths["#{x},#{y}h1"]
-          when 'h1'
+            current = paths["#{x},#{y}D"]||paths["#{x},#{y}L"]||paths["#{x},#{y}U"]||paths["#{x},#{y}R"]
+          when 'R'
             x++
-            current = paths["#{x},#{y}h1"]||paths["#{x},#{y}v-1"]||paths["#{x},#{y}h-1"]||paths["#{x},#{y}v1"]
-          when 'h-1'
+            current = paths["#{x},#{y}R"]||paths["#{x},#{y}D"]||paths["#{x},#{y}L"]||paths["#{x},#{y}U"]
+          when 'L'
             x--
-            current = paths["#{x},#{y}h-1"]||paths["#{x},#{y}v1"]||paths["#{x},#{y}h1"]||paths["#{x},#{y}v-1"]
-        break if current is start
+            current = paths["#{x},#{y}L"]||paths["#{x},#{y}U"]||paths["#{x},#{y}R"]||paths["#{x},#{y}D"]
 
   # 連続する同じ方向のパスの簡略化を行う
   pathStr
     .join('')
-    .replace(/(h1)+/g, (match)-> "h#{match.length / 2}")
-    .replace(/(h-1)+/g, (match)-> "h-#{match.length / 3}")
-    .replace(/(v1)+/g, (match)-> "v#{match.length / 2}")
-    .replace(/(v-1)+/g, (match)-> "v-#{match.length / 3}")
-    .replace(/[vh]-?\d$/, 'z')
-
-
-processFont = (img, baseX, baseY)->
-  hasPixel = false
-  pixelMap = for row in img.getSubPixels baseX * FONT_SIZE, baseY * FONT_SIZE, 8, 8
-    for pixel in row
-      hasPixel = hasPixel || pixel == 0
-      pixel == 0
-  if hasPixel
-    fs.writeFileSync "#{TMP_PATH}/#{baseY}_#{baseX}.svg", (createSvg pixelsToPath pixelMap)
+    .replace(/R+/g, (match)-> "h#{match.length * 1024 / FONT_SIZE}")
+    .replace(/L+/g, (match)-> "h-#{match.length * 1024 / FONT_SIZE}")
+    .replace(/U+/g, (match)-> "v-#{match.length * 1024 / FONT_SIZE}")
+    .replace(/D+/g, (match)-> "v#{match.length * 1024 / FONT_SIZE}")
+    .replace(/[vh]-?\d+$/, 'z')
 
 main = ->
   fs.mkdirSync TMP_PATH if !fs.existsSync TMP_PATH
@@ -108,8 +112,11 @@ main = ->
 
     img = new PixelImage pixels.data, pixels._shape1, pixels._shape0
 
-    for fontY in [0..(img.height / FONT_SIZE - 1)]
-      for fontX in [0..(img.width / FONT_SIZE - 1)]
-        processFont img, fontX, fontY
+    paths = {}
+    for y in [0..(codeMap.length - 1)]
+      for x in [0..(codeMap[y].length - 1)]
+        paths[codeMap[y].charAt(x)] = pixelsToPath img.getSubPixels x * FONT_SIZE, y * FONT_SIZE, FONT_SIZE, FONT_SIZE
+
+    fs.writeFileSync '8x8.svg', createSvg paths
 
 main()
