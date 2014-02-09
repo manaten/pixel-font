@@ -1,0 +1,9 @@
+{
+	"img": "8x8_bold.png",
+	"size": 8,
+	"name": "8x8_bold",
+	"map": [
+		"1234567890!?.,()｢｣-",
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	]
+}

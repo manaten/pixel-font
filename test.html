@@ -9,17 +9,58 @@
 	font-weight: normal;
 	font-style: normal;
 }
-.test {
-	font-family: '8x8';
+@font-face {
+	font-family: '6x6_fat';
+	src:url('6x6_fat.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: '8x8_bold';
+	src:url('8x8_bold.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: '8x8_border';
+	src:url('8x8_border.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+pre {
 	font-size: 24px;
-	color: #EEE; border: 3px solid #EEE; padding: 10px; background: #222; border-radius: 4px;
+	border: 3px solid #EEE; padding: 10px; background: #222; border-radius: 4px;
+}
+._8x8 {
+	font-family: '8x8';
+}
+._6x6_fat {
+	font-family: '6x6_fat';
+	letter-spacing: -6px;
+}
+._8x8_bold {
+	font-family: '8x8_bold';
+}
+._8x8_border {
+	font-family: '8x8_border';
+}
+.title {
+	font-family: '8x8_bold';
+	font-size: 32px;
+}
+.subtitle {
+	font-family: '6x6_fat';
+	font-size: 16px;
+	letter-spacing: -4px;
+
 }
 body {
 	background: #000;
+	color: #EEE;
 }
 	</style>
 
-<pre class="test">
+<pre class="_8x8">
 1234567890!?.,。、ゃゅょャュョ()｢｣
 abcdefghijklmnopqrstuvwxyz
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
@@ -30,5 +71,23 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ
 ハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォ
 ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ
 </pre>
+
+<pre class="_6x6_fat">
+1234567890!?.,()｢｣
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+</pre>
+
+<pre class="_8x8_bold">
+1234567890!?.,()｢｣
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+</pre>
+
+<pre class="_8x8_border">
+1234567890!?.,()｢｣
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+</pre>
+
+<div class="title">MANA-DOT</div>
+<div class="subtitle">PIXEL ART, PROGRAMING, ETC</div>
 </body>
 </html>

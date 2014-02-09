@@ -1,0 +1,9 @@
+{
+	"img": "8x8_border.png",
+	"size": 8,
+	"name": "8x8_border",
+	"map": [
+		"1234567890!?.,()｢｣-",
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	]
+}

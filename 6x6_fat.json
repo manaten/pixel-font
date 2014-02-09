@@ -1,0 +1,9 @@
+{
+	"img": "6x6_fat.png",
+	"size": 8,
+	"name": "6x6_fat",
+	"map": [
+		"1234567890!?.,()｢｣",
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	]
+}
