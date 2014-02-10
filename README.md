@@ -14,5 +14,5 @@ npm install -g coffee-script
 
 # 使い方
 ```
-coffee index.coffee 8x8.json
+coffee index.coffee /path/to/8x8.json
 ```
