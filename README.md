@@ -6,7 +6,7 @@ pixel-font
 
 # 必要なもの
 - node.js
--- node.jsを入れた後、```npm install```で必要なパッケージをインストールします。
+ - node.jsを入れた後、```npm install```で必要なパッケージをインストールします。
 - coffeescript
 ```
 npm install -g coffee-script
