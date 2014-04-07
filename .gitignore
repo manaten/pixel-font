@@ -1,2 +1,3 @@
-*.svg
+tmp
+dest
 node_modules
